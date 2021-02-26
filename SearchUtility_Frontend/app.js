@@ -16,6 +16,8 @@ app.listen(8080, 'localhost', function(){
     console.log("========== Web server running on port 8080 ==========\n\n");
 });
 
+var IsExactWordSearch;
+
 // connect to the MySQL server at the below ip:port
 // the port number is taken from the MySQL's 'SQL Server' 
 // reconfigure settings. 
@@ -39,24 +41,50 @@ app.get("/", async(request, response) => {
     response.render("home", {data: 0, theWord:""});
 });
 
-app.post("/search", async(request, response) => {
+app.post("/search_results", async(request, response) => {
     let orgWord = new String(request.body.word);
+    console.log(request.body);
+    IsExactWordSearch = request.body.searchParam1;
+    console.log(`IsExactWordSearch - ${IsExactWordSearch}`);
     if(orgWord.length == 0){
         console.log("cannot search empty text");
-        alert("cannot search empty text");
         response.redirect("/");
     }
     else{
         var keyword = stemmer(orgWord.toLowerCase().trim());
         console.log("Post request sent to server. keyword: " + keyword);
-        var word = {word: keyword};
-        let result = await runSqlQueryAsync("SELECT COUNT(*) as cnt FROM vocabulary WHERE word LIKE '" + "%" + keyword + "%'", true);
-        let searchCount = result[0].cnt; 
-        // response.redirect("/");
-        return response.render("home", {data: searchCount, theWord: orgWord});
+        //var word = {word: keyword};
+        if(IsExactWordSearch == 'undefined' || IsExactWordSearch == undefined)
+            keyword = "%" + keyword + "%";
+        else
+            keyword = orgWord;
+        var searchCommand = "SELECT *, COUNT(*) as count FROM vocabulary JOIN documents ON docID = documents.ID WHERE word LIKE '" + keyword + "' GROUP BY word ORDER BY count desc";
+        let result = await runSqlQueryAsync(searchCommand, false);
+         
+        let res = getAllListings(result);   
+        console.log(res);
+        return response.render("search_results", {data: res.count, theWord: orgWord, listings: res.listing});
     }    
-    
 });
+
+function getAllListings(allData){
+
+    // listing -> {word, file, occurances}
+    let data = [];
+    let total = 0;
+    let index = 0;
+    for(var item of allData){
+        //console.log(`{${item.word}:${item.file}:${item.count}}`);
+        data[index] ={
+            word: item.word, 
+            file: item.file, 
+            occurances: item.count
+        }
+        index++;
+        total += item.count;
+    }
+    return {listing:data, count:total};
+}
 
 // call runSqlQuery when the return value is not important
 // call runSqlQueryAsync when the return value of the query needs to be captured.
