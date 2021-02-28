@@ -17,6 +17,8 @@ app.listen(8080, 'localhost', function(){
 });
 
 var IsExactWordSearch;
+var SearchQueryResults;
+var IsServerBusy = false;
 
 // connect to the MySQL server at the below ip:port
 // the port number is taken from the MySQL's 'SQL Server' 
@@ -53,19 +55,54 @@ app.post("/search_results", async(request, response) => {
     else{
         var keyword = stemmer(orgWord.toLowerCase().trim());
         console.log("Post request sent to server. keyword: " + keyword);
-        //var word = {word: keyword};
+
         if(IsExactWordSearch == 'undefined' || IsExactWordSearch == undefined)
             keyword = "%" + keyword + "%";
         else
-            keyword = orgWord;
-        var searchCommand = "SELECT *, COUNT(*) as count FROM vocabulary JOIN documents ON docID = documents.ID WHERE word LIKE '" + keyword + "' GROUP BY word ORDER BY count desc";
-        let result = await runSqlQueryAsync(searchCommand, false);
+            keyword = keyword;
+
+        var searchCommand = getMySQLSearchCmd(keyword); 
+        SearchQueryResults = await runSqlQueryAsync(searchCommand, false);
          
-        let res = getAllListings(result);   
+        let res = getAllListings(SearchQueryResults);   
         console.log(res);
         return response.render("search_results", {data: res.count, theWord: orgWord, listings: res.listing});
     }    
 });
+
+(setInterval(
+    async function(){ 
+        // check the server state
+        let cmd = getMySQLServerStateCmd();
+        let result = await runSqlQueryAsync(cmd, false);
+        let newServerState;
+        if(result.length > 0){
+            newServerState = true;
+        } else {
+            newServerState = false;
+        }
+        if(newServerState != IsServerBusy){
+            // show an alert 
+            IsServerBusy = newServerState;
+        }
+     }, 
+5000));
+
+function getMySQLSearchCmd(keywordToSearch){
+    let searchCommand = "SELECT *, COUNT(*) as count FROM occurances ";
+    searchCommand += "JOIN documents ON docID = dID ";
+    searchCommand += "JOIN vocabulary ON wordID = wID ";
+    searchCommand += "WHERE word LIKE '" + keywordToSearch + "' ";
+    searchCommand += "GROUP BY docID ";
+    searchCommand += "ORDER BY count desc";
+
+    return searchCommand;
+}
+
+function getMySQLServerStateCmd(){
+    let cmd = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME= 'state'"
+    return cmd; 
+}
 
 function getAllListings(allData){
 
