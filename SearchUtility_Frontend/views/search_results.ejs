@@ -6,15 +6,15 @@
         <h1>Search Utility</h1>
         <form METHOD="POST" action="/search_results">
             <input type="text" name="word" class="form" placeholder="Enter keyword to search">
-            <input type="checkbox" id="searchParam1" name="searchParam1">
-            <label for="searchParam1">Match word</label><br>
+            <!--<input type="checkbox" id="searchParam1" name="searchParam1">-->
+            <!--<label for="searchParam1">Match word</label><br>-->
             <button>Search</button>
         </form>
     </div>
     <div class="resultsview">
         <p><strong><%=data%></strong> search results found for the word <strong>'<%=theWord%>'</strong></p>    
 
-        <p id="result_listings">
+        <div id="result_listings">
             <script>
                 var inHTML = '<table style="border: 1px solid black">';
                 var results = <%- JSON.stringify(listings) %>;
@@ -24,7 +24,7 @@
                 inHTML += "<th>count</th>";
                 inHTML += "</tr>";
                 for(var res of results){
-                    inHTML += "<tr>";
+                    inHTML += '<tr style="border: 1px solid black>';
                     inHTML += "<th>" + res.word + "</th>";
                     inHTML += "<th>" + res.file + "</th>";
                     inHTML += "<th>" + res.occurances + "</th>";
@@ -34,7 +34,7 @@
                 console.log(inHTML);
                 document.getElementById("result_listings").innerHTML = inHTML;
             </script>
-        </p>        
+        </div>        
 
     </div>
 </div>
