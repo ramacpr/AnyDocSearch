@@ -61,6 +61,8 @@ class ExtendedStopWord:
                      "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
                      "january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
                      "november", "december",
+                     "mon", "tue", "wed", "thur", "fri", "sat", "sun",
+                     "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sept", "nov", "dec",
                      "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
                      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p",
                      "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "`", "~", "!", "@", "#", "$", "%",
@@ -155,7 +157,7 @@ class ExtendedStopWord:
     def __init__(self):
         self._AllStopWords = set(StopWords.words('english'))
         for newWord in self._NewStopWords:
-            self._AllStopWords.add(newWord)
+           self._AllStopWords.add(newWord)
 
     def thestopwords(self):
         return self._AllStopWords;
